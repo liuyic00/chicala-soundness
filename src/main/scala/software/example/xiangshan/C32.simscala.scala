@@ -1,10 +1,5 @@
-package software.example.xiangshan
-
-import stainless.lang._
-import stainless.collection._
-import stainless.equations._
-import stainless.annotation._
-import stainless.proof.check
+package software
+package example.xiangshan
 
 import libraryUInt._
 
@@ -36,17 +31,15 @@ case class C32() {
 
     // body
     var temp = List.fill(1)(UInt.empty(2))
-    (0 until temp.length).foreach((i: BigInt) => {
+    (0 until temp.length).foreach((i: Int) => {
       val (a, b, cin) = (inputs.io_in(0)(i), inputs.io_in(1)(i), inputs.io_in(2)(i))
-      val a_xor_b     = (a ^ b)
-      val a_and_b     = (a & b)
-      val sum         = (a_xor_b ^ cin)
-      val cout        = (a_and_b | (a_xor_b & cin))
+      val a_xor_b = (a ^ b)
+      val a_and_b = (a & b)
+      val sum = (a_xor_b ^ cin)
+      val cout = (a_and_b | (a_xor_b & cin))
       temp = temp.updated(i, Cat(cout, sum))
     })
-    (0 until io_out.length).foreach((i: BigInt) =>
-      io_out = io_out.updated(i, Cat(temp.reverse.map((x$4: UInt) => x$4(i))))
-    )
+    (0 until io_out.length).foreach((i: Int) => io_out = io_out.updated(i, Cat(temp.reverse.map((x$4: UInt) => x$4(i)))))
 
     (
       C32Outputs(io_out),

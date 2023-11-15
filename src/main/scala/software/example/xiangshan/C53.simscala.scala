@@ -1,10 +1,5 @@
-package software.example.xiangshan
-
-import stainless.lang._
-import stainless.collection._
-import stainless.equations._
-import stainless.annotation._
-import stainless.proof.check
+package software
+package example.xiangshan
 
 import libraryUInt._
 
@@ -35,11 +30,11 @@ case class C53() {
     var io_out = List.fill(3)(UInt.empty(1))
 
     // body
-    val FAs0        = example.xiangshan.C32()
-    var FAs0_io_in  = List.fill(3)(UInt.empty(1))
+    val FAs0 = example.xiangshan.C32()
+    var FAs0_io_in = List.fill(3)(UInt.empty(1))
     var FAs0_io_out = List.fill(2)(UInt.empty(1))
-    val FAs1        = example.xiangshan.C32()
-    var FAs1_io_in  = List.fill(3)(UInt.empty(1))
+    val FAs1 = example.xiangshan.C32()
+    var FAs1_io_in = List.fill(3)(UInt.empty(1))
     var FAs1_io_out = List.fill(2)(UInt.empty(1))
     FAs0_io_in = FAs0_io_in := inputs.io_in.take(3)
     val (FAs0TransOutputs, _) = C53.this.FAs0.trans(
