@@ -31,12 +31,12 @@ class MultiplierIO(val dataBits: Int, val tagBits: Int) extends Bundle {
 }
 
 class Mul(
+    w: Int,
     mulUnroll: Int = 1,
     divUnroll: Int = 1,
     mulEarlyOut: Boolean = false,
     divEarlyOut: Boolean = false,
     divEarlyOutGranularity: Int = 1,
-    w: Int,
     nXpr: Int = 32
 ) extends Module {
   // require(mulUnroll > 0)

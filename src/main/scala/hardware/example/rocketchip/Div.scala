@@ -5,12 +5,12 @@ import chisel3._
 import chisel3.util._
 
 class Div(
+    w: Int,
     mulUnroll: Int = 1,
     divUnroll: Int = 1,
     mulEarlyOut: Boolean = false,
     divEarlyOut: Boolean = false,
     divEarlyOutGranularity: Int = 1,
-    w: Int,
     nXpr: Int = 32
 ) extends Module {
   // require(divUnroll > 0)
