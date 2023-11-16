@@ -1,7 +1,7 @@
 package software
 package example.xiangshan
 
-import libraryUInt._
+import librarySimUInt._
 
 case class C53Inputs(io_in: List[UInt])
 case class C53Outputs(io_out: List[UInt])
@@ -56,8 +56,6 @@ case class C53() {
       C53Outputs(io_out),
       C53Regs()
     )
-  } ensuring { case (outputs, regNexts) =>
-    outputsRequire(outputs) && regsRequire(regNexts)
   }
 
   def c53Run(timeout: Int, inputs: C53Inputs, regInit: C53Regs): (C53Outputs, C53Regs) = {
@@ -68,14 +66,10 @@ case class C53() {
     } else {
       (newOutputs, newRegs)
     }
-  } ensuring { case (outputs, regNexts) =>
-    outputsRequire(outputs) && regsRequire(regNexts)
   }
   def run(inputs: C53Inputs, randomInitValue: C53Regs): (C53Outputs, C53Regs) = {
     require(inputsRequire(inputs) && regsRequire(randomInitValue))
     val regInit = C53Regs()
     c53Run(100, inputs, regInit)
-  } ensuring { case (outputs, regNexts) =>
-    outputsRequire(outputs) && regsRequire(regNexts)
   }
 }

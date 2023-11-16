@@ -1,15 +1,15 @@
 package software
 package example.rocketchip
 
-import libraryUInt._
+import librarySimUInt._
 
 case class MulInputs(
     io_req_valid: Bool,
+    io_req_bits_tag: UInt,
     io_req_bits_dw: UInt,
+    io_req_bits_fn: UInt,
     io_req_bits_in1: UInt,
     io_req_bits_in2: UInt,
-    io_req_bits_tag: UInt,
-    io_req_bits_fn: UInt,
     io_resp_ready: Bool
 )
 case class MulOutputs(
@@ -20,11 +20,11 @@ case class MulOutputs(
 )
 case class MulRegs(
     state: UInt,
+    req_tag: UInt,
     req_dw: UInt,
+    req_fn: UInt,
     req_in1: UInt,
     req_in2: UInt,
-    req_tag: UInt,
-    req_fn: UInt,
     count: UInt,
     neg_out: Bool,
     isHi: Bool,
@@ -43,12 +43,12 @@ case class Mul(
     nXpr: Int = 32
 ) {
   def inputsRequire(inputs: MulInputs): Boolean = inputs match {
-    case MulInputs(io_req_valid, io_req_bits_dw, io_req_bits_in1, io_req_bits_in2, io_req_bits_tag, io_req_bits_fn, io_resp_ready) =>
-      io_req_bits_dw.width == 1 &&
-      io_req_bits_in1.width == w &&
-      io_req_bits_in2.width == w &&
+    case MulInputs(io_req_valid, io_req_bits_tag, io_req_bits_dw, io_req_bits_fn, io_req_bits_in1, io_req_bits_in2, io_resp_ready) =>
       io_req_bits_tag.width == log2Up(nXpr) &&
-      io_req_bits_fn.width == 4
+      io_req_bits_dw.width == 1 &&
+      io_req_bits_fn.width == 4 &&
+      io_req_bits_in1.width == w &&
+      io_req_bits_in2.width == w
   }
   def outputsRequire(outputs: MulOutputs): Boolean = outputs match {
     case MulOutputs(io_req_ready, io_resp_valid, io_resp_bits_data, io_resp_bits_tag) =>
@@ -56,13 +56,13 @@ case class Mul(
       io_resp_bits_tag.width == log2Up(nXpr)
   }
   def regsRequire(regs: MulRegs): Boolean = regs match {
-    case MulRegs(state, req_dw, req_in1, req_in2, req_tag, req_fn, count, neg_out, isHi, resHi, divisor, remainder) =>
-      state.width == 2 &&
+    case MulRegs(state, req_tag, req_dw, req_fn, req_in1, req_in2, count, neg_out, isHi, resHi, divisor, remainder) =>
+      state.width == 3 &&
+      req_tag.width == log2Up(nXpr) &&
       req_dw.width == 1 &&
+      req_fn.width == 4 &&
       req_in1.width == w &&
       req_in2.width == w &&
-      req_tag.width == log2Up(nXpr) &&
-      req_fn.width == 4 &&
       count.width == log2Ceil(((if ((mulUnroll == 0)) w else ((((w + mulUnroll) - 1) / mulUnroll) * mulUnroll)) / mulUnroll)) &&
       divisor.width == (w + 1) &&
       remainder.width == ((2 * (if ((mulUnroll == 0)) w else ((((w + mulUnroll) - 1) / mulUnroll) * mulUnroll))) + 2)
@@ -78,11 +78,11 @@ case class Mul(
     var io_resp_bits_tag = UInt.empty(log2Up(nXpr))
     // reg next
     var state_next = regs.state
+    var req_tag_next = regs.req_tag
     var req_dw_next = regs.req_dw
+    var req_fn_next = regs.req_fn
     var req_in1_next = regs.req_in1
     var req_in2_next = regs.req_in2
-    var req_tag_next = regs.req_tag
-    var req_fn_next = regs.req_fn
     var count_next = regs.count
     var neg_out_next = regs.neg_out
     var isHi_next = regs.isHi
@@ -95,7 +95,7 @@ case class Mul(
     def minLatency: Int = minMulLatency
     val mulw = if ((mulUnroll == 0)) w else ((((w + mulUnroll) - 1) / mulUnroll) * mulUnroll)
     val fastMulW = if ((mulUnroll == 0)) false else (((w / 2) > mulUnroll) && ((w % (2 * mulUnroll)) == 0))
-    val (s_ready, s_mul, s_done_mul) = (Lit(0, 2).U, Lit(1, 2).U, Lit(2, 2).U)
+    val (s_ready, s_neg_inputs, s_mul, s_div, s_dummy, s_neg_output, s_done_mul, s_done_div) = (Lit(0, 3).U, Lit(1, 3).U, Lit(2, 3).U, Lit(3, 3).U, Lit(4, 3).U, Lit(5, 3).U, Lit(6, 3).U, Lit(7, 3).U)
     var cmdMul = Lit(false).B
     var cmdHi = Lit(false).B
     var lhsSigned = Lit(false).B
@@ -137,7 +137,7 @@ case class Mul(
         resHi_next = resHi_next := regs.isHi
       }
     }
-    val outMul = ((regs.state & s_done_mul) === s_done_mul)
+    val outMul = ((regs.state & (s_done_mul ^ s_done_div)) === (s_done_mul & ~s_done_div))
     io_resp_valid = io_resp_valid := (regs.state === s_done_mul)
     if (when((inputs.io_resp_ready && io_resp_valid))) state_next = state_next := s_ready
     io_req_ready = io_req_ready := (regs.state === s_ready)
@@ -165,11 +165,11 @@ case class Mul(
       ),
       MulRegs(
         state_next,
+        req_tag_next,
         req_dw_next,
+        req_fn_next,
         req_in1_next,
         req_in2_next,
-        req_tag_next,
-        req_fn_next,
         count_next,
         neg_out_next,
         isHi_next,
@@ -178,8 +178,6 @@ case class Mul(
         remainder_next
       )
     )
-  } ensuring { case (outputs, regNexts) =>
-    outputsRequire(outputs) && regsRequire(regNexts)
   }
 
   def mulRun(timeout: Int, inputs: MulInputs, regInit: MulRegs): (MulOutputs, MulRegs) = {
@@ -190,18 +188,16 @@ case class Mul(
     } else {
       (newOutputs, newRegs)
     }
-  } ensuring { case (outputs, regNexts) =>
-    outputsRequire(outputs) && regsRequire(regNexts)
   }
   def run(inputs: MulInputs, randomInitValue: MulRegs): (MulOutputs, MulRegs) = {
     require(inputsRequire(inputs) && regsRequire(randomInitValue))
     val regInit = MulRegs(
-      Lit(0, 2).U,
+      Lit(0, 3).U,
+      randomInitValue.req_tag,
       randomInitValue.req_dw,
+      randomInitValue.req_fn,
       randomInitValue.req_in1,
       randomInitValue.req_in2,
-      randomInitValue.req_tag,
-      randomInitValue.req_fn,
       randomInitValue.count,
       randomInitValue.neg_out,
       randomInitValue.isHi,
@@ -210,7 +206,5 @@ case class Mul(
       randomInitValue.remainder
     )
     mulRun(100, inputs, regInit)
-  } ensuring { case (outputs, regNexts) =>
-    outputsRequire(outputs) && regsRequire(regNexts)
   }
 }

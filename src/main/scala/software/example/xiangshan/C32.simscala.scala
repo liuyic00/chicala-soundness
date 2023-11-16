@@ -1,7 +1,7 @@
 package software
 package example.xiangshan
 
-import libraryUInt._
+import librarySimUInt._
 
 case class C32Inputs(io_in: List[UInt])
 case class C32Outputs(io_out: List[UInt])
@@ -45,8 +45,6 @@ case class C32() {
       C32Outputs(io_out),
       C32Regs()
     )
-  } ensuring { case (outputs, regNexts) =>
-    outputsRequire(outputs) && regsRequire(regNexts)
   }
 
   def c32Run(timeout: Int, inputs: C32Inputs, regInit: C32Regs): (C32Outputs, C32Regs) = {
@@ -57,14 +55,10 @@ case class C32() {
     } else {
       (newOutputs, newRegs)
     }
-  } ensuring { case (outputs, regNexts) =>
-    outputsRequire(outputs) && regsRequire(regNexts)
   }
   def run(inputs: C32Inputs, randomInitValue: C32Regs): (C32Outputs, C32Regs) = {
     require(inputsRequire(inputs) && regsRequire(randomInitValue))
     val regInit = C32Regs()
     c32Run(100, inputs, regInit)
-  } ensuring { case (outputs, regNexts) =>
-    outputsRequire(outputs) && regsRequire(regNexts)
   }
 }

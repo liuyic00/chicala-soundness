@@ -1,7 +1,7 @@
 package software
 package example.xiangshan
 
-import libraryUInt._
+import librarySimUInt._
 
 case class DividerInputs(
     io_in_valid: Bool,
@@ -112,8 +112,6 @@ case class Divider(len: Int = 64) {
         cnt_next
       )
     )
-  } ensuring { case (outputs, regNexts) =>
-    outputsRequire(outputs) && regsRequire(regNexts)
   }
 
   def dividerRun(timeout: Int, inputs: DividerInputs, regInit: DividerRegs): (DividerOutputs, DividerRegs) = {
@@ -124,8 +122,6 @@ case class Divider(len: Int = 64) {
     } else {
       (newOutputs, newRegs)
     }
-  } ensuring { case (outputs, regNexts) =>
-    outputsRequire(outputs) && regsRequire(regNexts)
   }
   def run(inputs: DividerInputs, randomInitValue: DividerRegs): (DividerOutputs, DividerRegs) = {
     require(inputsRequire(inputs) && regsRequire(randomInitValue))
@@ -139,7 +135,5 @@ case class Divider(len: Int = 64) {
       Lit(0, bitLength(len)).U
     )
     dividerRun(100, inputs, regInit)
-  } ensuring { case (outputs, regNexts) =>
-    outputsRequire(outputs) && regsRequire(regNexts)
   }
 }

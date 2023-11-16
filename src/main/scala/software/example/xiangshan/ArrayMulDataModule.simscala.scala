@@ -1,7 +1,7 @@
 package software
 package example.xiangshan
 
-import libraryUInt._
+import librarySimUInt._
 
 case class ArrayMulDataModuleInputs(
     io_a: UInt,
@@ -156,8 +156,6 @@ case class ArrayMulDataModule(len: Int) {
       ArrayMulDataModuleOutputs(io_result),
       ArrayMulDataModuleRegs()
     )
-  } ensuring { case (outputs, regNexts) =>
-    outputsRequire(outputs) && regsRequire(regNexts)
   }
 
   def arrayMulDataModuleRun(timeout: Int, inputs: ArrayMulDataModuleInputs, regInit: ArrayMulDataModuleRegs): (ArrayMulDataModuleOutputs, ArrayMulDataModuleRegs) = {
@@ -168,14 +166,10 @@ case class ArrayMulDataModule(len: Int) {
     } else {
       (newOutputs, newRegs)
     }
-  } ensuring { case (outputs, regNexts) =>
-    outputsRequire(outputs) && regsRequire(regNexts)
   }
   def run(inputs: ArrayMulDataModuleInputs, randomInitValue: ArrayMulDataModuleRegs): (ArrayMulDataModuleOutputs, ArrayMulDataModuleRegs) = {
     require(inputsRequire(inputs) && regsRequire(randomInitValue))
     val regInit = ArrayMulDataModuleRegs()
     arrayMulDataModuleRun(100, inputs, regInit)
-  } ensuring { case (outputs, regNexts) =>
-    outputsRequire(outputs) && regsRequire(regNexts)
   }
 }

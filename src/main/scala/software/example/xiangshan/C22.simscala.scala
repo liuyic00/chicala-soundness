@@ -1,7 +1,7 @@
 package software
 package example.xiangshan
 
-import libraryUInt._
+import librarySimUInt._
 
 case class C22Inputs(io_in: List[UInt])
 case class C22Outputs(io_out: List[UInt])
@@ -43,8 +43,6 @@ case class C22() {
       C22Outputs(io_out),
       C22Regs()
     )
-  } ensuring { case (outputs, regNexts) =>
-    outputsRequire(outputs) && regsRequire(regNexts)
   }
 
   def c22Run(timeout: Int, inputs: C22Inputs, regInit: C22Regs): (C22Outputs, C22Regs) = {
@@ -55,14 +53,10 @@ case class C22() {
     } else {
       (newOutputs, newRegs)
     }
-  } ensuring { case (outputs, regNexts) =>
-    outputsRequire(outputs) && regsRequire(regNexts)
   }
   def run(inputs: C22Inputs, randomInitValue: C22Regs): (C22Outputs, C22Regs) = {
     require(inputsRequire(inputs) && regsRequire(randomInitValue))
     val regInit = C22Regs()
     c22Run(100, inputs, regInit)
-  } ensuring { case (outputs, regNexts) =>
-    outputsRequire(outputs) && regsRequire(regNexts)
   }
 }
