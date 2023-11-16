@@ -1,17 +1,9 @@
-package libraryUInt
+package librarySimUInt
 
-import stainless.lang._
-import stainless.collection._
-import stainless.equations._
-import stainless.annotation._
-import stainless.proof.check
-
-@library
 sealed abstract class Bits {
   def asUInt: UInt
 }
 
-@library
 case class UInt(val value: BigInt, val width: BigInt) extends Bits {
   require(0 < width)
   require(0 <= value && value < Pow2(width))
@@ -25,10 +17,10 @@ case class UInt(val value: BigInt, val width: BigInt) extends Bits {
   //   UInt((value / Pow2(idx)) % 2, 1)
   // }
   def apply(left: BigInt, right: BigInt): UInt = {
-      require(right >= 0)
-      require(left >= right)
-      UInt((value / Pow2(right)) % Pow2(left - right + 1), left - right + 1)
-  } ensuring(res => res.width == left - right + 1 && res.value == (this.value / Pow2(right)) % Pow2(left - right + 1))
+    require(right >= 0)
+    require(left >= right)
+    UInt((value / Pow2(right)) % Pow2(left - right + 1), left - right + 1)
+  } ensuring (res => res.width == left - right + 1 && res.value == (this.value / Pow2(right)) % Pow2(left - right + 1))
 
   def getWidth: BigInt = width
   def asUInt: UInt     = this
@@ -38,7 +30,7 @@ case class UInt(val value: BigInt, val width: BigInt) extends Bits {
   }
   def :=(that: UInt): UInt = {
     UInt(that.value % Pow2(this.width), this.width)
-  } ensuring(res => res.value == that.value % Pow2(this.width) && res.width == this.width)
+  } ensuring (res => res.value == that.value % Pow2(this.width) && res.width == this.width)
 
   // Unary
 
@@ -90,7 +82,7 @@ case class UInt(val value: BigInt, val width: BigInt) extends Bits {
       if (carryed >= limt) carryed - limt else carryed,
       newWidth
     )
-  } ensuring(res => res.value == (this.value + that.value) % Pow2(res.width))
+  } ensuring (res => res.value == (this.value + that.value) % Pow2(res.width))
   def -(that: UInt): UInt = {
     val carryed  = this.value - that.value
     val newWidth = if (this.width > that.width) this.width else that.width
@@ -108,24 +100,41 @@ case class UInt(val value: BigInt, val width: BigInt) extends Bits {
       newWidth
     )
   }
+  def *(that: UInt): UInt = {
+    UInt(this.value * that.value, this.width + that.width)
+  }
   def <<(that: UInt): UInt = {
     assert(that.value <= Pow2(that.width) - 1)
-    
+
     Pow2.Pow2Monotone(Pow2(that.width) - 1, that.value)
     assert(Pow2(that.value) <= Pow2(Pow2(that.width) - 1))
-    
-    {
-      Pow2(this.width + Pow2(that.width) - 1) ==:| Pow2.Pow2Mul(this.width + Pow2(that.width) - 1, this.width, Pow2(that.width) - 1) |:
-      Pow2(this.width) * Pow2(Pow2(that.width) - 1)
-    }.qed
-    
+
     assert(this.value < Pow2(this.width))
     assert(Pow2(that.value) <= Pow2(Pow2(that.width) - 1))
     assert(Pow2(this.width) * Pow2(Pow2(that.width) - 1) == Pow2(this.width + Pow2(that.width) - 1))
     assert(this.value * Pow2(that.value) < Pow2(this.width + Pow2(that.width) - 1))
 
     UInt(this.value * Pow2(that.value), this.width + Pow2(that.width) - 1)
-  } ensuring(res => res.value < Pow2(this.width + that.value))
+  } ensuring (res => res.value < Pow2(this.width + that.value))
+  def <<(x: Int): UInt = {
+    UInt(this.value << x, this.width + x)
+  }
+  def >>(that: UInt): UInt = {
+    UInt(this.value / Pow2(that.value), this.width - Pow2(that.width) + 1)
+  }
+  def >>(x: Int): UInt = {
+    UInt(this.value >> x, this.width - x)
+  }
+
+  def &(that: UInt): UInt = {
+    UInt(this.value & that.value, if (this.width > that.width) this.width else that.width)
+  }
+  def |(that: UInt): UInt = {
+    UInt(this.value | that.value, if (this.width > that.width) this.width else that.width)
+  }
+  def ^(that: UInt): UInt = {
+    UInt(this.value ^ that.value, if (this.width > that.width) this.width else that.width)
+  }
 
   // def <<(that: BigInt): UInt = {
   //   UInt(this.value * Pow2(that), this.width + that)
@@ -134,7 +143,10 @@ case class UInt(val value: BigInt, val width: BigInt) extends Bits {
   // Binary compire
   def ===(that: UInt): Bool = {
     Bool(this.value == that.value)
-  } ensuring(res => res.value == (this.value == that.value))
+  } ensuring (res => res.value == (this.value == that.value))
+  def =/=(that: UInt): Bool = {
+    Bool(this.value != that.value)
+  }
   def ===(that: Bool): Bool = {
     require(this.width == BigInt(1))
     Bool(this.value == that.asUInt.value)
@@ -144,7 +156,6 @@ case class UInt(val value: BigInt, val width: BigInt) extends Bits {
   }
 }
 
-@library
 object UInt {
   def empty(width: BigInt): UInt = {
     require(0 < width)
@@ -156,7 +167,6 @@ object UInt {
   // }
 }
 
-@library
 case class Bool(val value: Boolean) extends Bits {
   def asUInt: UInt = {
     if (value) {
@@ -164,7 +174,7 @@ case class Bool(val value: Boolean) extends Bits {
     } else {
       UInt(0, 1)
     }
-  } ensuring(res => res.width == BigInt(1))
+  } ensuring (res => res.width == BigInt(1))
 
   def asBigInt: BigInt = {
     if (value) {
@@ -172,7 +182,7 @@ case class Bool(val value: Boolean) extends Bits {
     } else {
       BigInt(0)
     }
-  } ensuring(res => res == this.asUInt.value)
+  } ensuring (res => res == this.asUInt.value)
 
   def :=(that: Bool): Bool = {
     Bool(that.value)
@@ -197,16 +207,25 @@ case class Bool(val value: Boolean) extends Bits {
   def &&(that: Bool): Bool = {
     Bool(this.value && that.value)
   }
+  def ||(that: Bool): Bool = {
+    Bool(this.value || that.value)
+  }
+
+  def ===(that: Bool): Bool = {
+    Bool(this.value == that.value)
+  }
+
+  def =/=(that: Bool): Bool = {
+    Bool(this.value != that.value)
+  }
 }
 
-@library
 object Bool {
   def empty(): Bool = {
     Bool(false)
   }
 }
 
-@library
 case class Lit(value: BigInt, width: BigInt) {
   require(0 <= value && value < Pow2(width))
   require(0 < width)
@@ -214,8 +233,7 @@ case class Lit(value: BigInt, width: BigInt) {
   def B: Bool = Bool(value != 0)
 }
 
-// set the width of 0.U to 1, not bitLength(0)     
-@library
+// set the width of 0.U to 1, not bitLength(0)
 object Lit {
   def apply(value: BigInt): Lit = {
     require(0 <= value)
@@ -225,7 +243,7 @@ object Lit {
       Pow2.Pow2BitLength(value)
       Lit(value, bitLength(value))
     }
-  } ensuring(res => res.value == value && res.width == bitLength(value))
+  } ensuring (res => res.value == value && res.width == bitLength(value))
 
   def apply(value: Boolean): Lit = {
     Lit(if (value) 1 else 0, 1)
