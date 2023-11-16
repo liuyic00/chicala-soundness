@@ -197,4 +197,8 @@ class ArrayMulDataModule(len: Int) extends Module {
   val (sum, carry) = addAll(cols = columns, depth = 0)
 
   io.result := sum + carry
+
+  assume(io.a(len-1) === false.B)
+  assume(io.b(len-1) === false.B)
+  assert(io.result === io.a * io.b)
 }

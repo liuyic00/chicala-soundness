@@ -20,7 +20,7 @@ object Elaborate extends App {
         case ("xiangshan_mul", 4) =>
         case _ =>
           (new chisel3.stage.ChiselStage)
-            .emitVerilog(gen(width), targetDir(name, width))
+            .emitSystemVerilog(gen(width), targetDir(name, width))
       }
     }
   }

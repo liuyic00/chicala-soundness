@@ -42,6 +42,10 @@ class Divider(len: Int = 64) extends Module {
   val bReg          = RegEnable(bVal, newReq)                       // 15
   val aValx2Reg     = RegEnable(Cat(aVal, "b0".U), newReq)          // 16
 
+  assume(io.sign === false.B)
+  val atmpReg = RegEnable(a, 0.U(len.W), newReq)
+  val btmpReg = RegEnable(b, 0.U(len.W), newReq)
+
   val canSkipShift = (len.U + Log2(bReg)) - Log2(aValx2Reg) // 17
   val enough       = hi.asUInt >= bReg.asUInt               // 18
 
@@ -72,4 +76,12 @@ class Divider(len: Int = 64) extends Module {
 
   io.out.valid := (state === s_finish) // 25
   io.in.ready  := (state === s_idle)   // 26
+
+  when(io.out.valid) {
+    // R Q
+    val R = io.out.bits(len * 2 - 1, len)
+    val Q = io.out.bits(len - 1, 0)
+
+    assert(atmpReg === btmpReg * Q + R)
+  }
 }
