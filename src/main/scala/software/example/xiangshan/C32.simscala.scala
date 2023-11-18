@@ -3,8 +3,8 @@ package example.xiangshan
 
 import librarySimUInt._
 
-case class C32Inputs(io_in: List[UInt])
-case class C32Outputs(io_out: List[UInt])
+case class C32Inputs(io_in: Seq[UInt])
+case class C32Outputs(io_out: Seq[UInt])
 case class C32Regs()
 
 case class C32() {
@@ -27,19 +27,19 @@ case class C32() {
     require(inputsRequire(inputs) && regsRequire(regs))
 
     // output
-    var io_out = List.fill(2)(UInt.empty(1))
+    var io_out = Seq.fill(2)(UInt.empty(1))
 
     // body
-    var temp = List.fill(1)(UInt.empty(2))
+    var temp = Seq.fill(1)(UInt.empty(2))
     (0 until temp.length).foreach((i: Int) => {
       val (a, b, cin) = (inputs.io_in(0)(i), inputs.io_in(1)(i), inputs.io_in(2)(i))
       val a_xor_b = (a ^ b)
       val a_and_b = (a & b)
       val sum = (a_xor_b ^ cin)
       val cout = (a_and_b | (a_xor_b & cin))
-      temp = temp.updated(i, Cat(cout, sum))
+      temp = temp.updated[UInt, Seq[UInt]](i, temp(i) := Cat(cout, sum))
     })
-    (0 until io_out.length).foreach((i: Int) => io_out = io_out.updated(i, Cat(temp.reverse.map((x$4: UInt) => x$4(i)))))
+    (0 until io_out.length).foreach((i: Int) => io_out = io_out.updated[UInt, Seq[UInt]](i, io_out(i) := Cat(temp.reverse.map((x$4: UInt) => x$4(i)))))
 
     (
       C32Outputs(io_out),

@@ -134,7 +134,7 @@ case class Div(
     val dividendMSB = (Log2(regs.remainder((w - 1), 0), w) | ~alignMask)
     val eOutPos = ~(dividendMSB - divisorMSB)
     val eOut = (((regs.count === Lit(0).U) && !divby0) && (eOutPos >= Lit(align).U))
-    var unrolls = List[UInt]()
+    var unrolls = Seq[UInt]()
     if ((divUnroll != 0)) if (when((regs.state === s_div))) {
       unrolls = (0 until divUnroll).scanLeft(regs.remainder)({ case (rem, i) => {
           val difference = if ((i == 0)) subtractor else (rem((2 * w), w) - regs.divisor((w - 1), 0))
@@ -166,7 +166,11 @@ case class Div(
       neg_out_next = neg_out_next := Mux(cmdHi, lhs_sign, (lhs_sign =/= rhs_sign))
       divisor_next = divisor_next := Cat(rhs_sign, rhs_in)
       remainder_next = remainder_next := lhs_in
-      req_next = req_next := io_req_bits
+      req_tag_next = req_tag_next := inputs.io_req_bits_tag
+      req_dw_next = req_dw_next := inputs.io_req_bits_dw
+      req_fn_next = req_fn_next := inputs.io_req_bits_fn
+      req_in1_next = req_in1_next := inputs.io_req_bits_in1
+      req_in2_next = req_in2_next := inputs.io_req_bits_in2
     }
     val loOut = Mux(((Lit(fastMulW).B && halfWidth(regs.req_dw)) && outMul), result((w - 1), (w / 2)), result(((w / 2) - 1), 0))
     val hiOut = Mux(halfWidth(regs.req_dw), Fill((w / 2), loOut(((w / 2) - 1))), result((w - 1), (w / 2)))

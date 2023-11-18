@@ -3,8 +3,8 @@ package example.xiangshan
 
 import librarySimUInt._
 
-case class C53Inputs(io_in: List[UInt])
-case class C53Outputs(io_out: List[UInt])
+case class C53Inputs(io_in: Seq[UInt])
+case class C53Outputs(io_out: Seq[UInt])
 case class C53Regs()
 
 case class C53() {
@@ -27,30 +27,36 @@ case class C53() {
     require(inputsRequire(inputs) && regsRequire(regs))
 
     // output
-    var io_out = List.fill(3)(UInt.empty(1))
+    var io_out = Seq.fill(3)(UInt.empty(1))
 
     // body
     val FAs0 = example.xiangshan.C32()
-    var FAs0_io_in = List.fill(3)(UInt.empty(1))
-    var FAs0_io_out = List.fill(2)(UInt.empty(1))
+    var FAs0_io_in = Seq.fill(3)(UInt.empty(1))
+    var FAs0_io_out = Seq.fill(2)(UInt.empty(1))
     val FAs1 = example.xiangshan.C32()
-    var FAs1_io_in = List.fill(3)(UInt.empty(1))
-    var FAs1_io_out = List.fill(2)(UInt.empty(1))
-    FAs0_io_in = FAs0_io_in := inputs.io_in.take(3)
-    val (FAs0TransOutputs, _) = C53.this.FAs0.trans(
+    var FAs1_io_in = Seq.fill(3)(UInt.empty(1))
+    var FAs1_io_out = Seq.fill(2)(UInt.empty(1))
+    (0 until FAs0_io_in.length)
+      .zip(inputs.io_in.take(3))
+      .foreach { case (i, s) => FAs0_io_in = FAs0_io_in.updated[UInt, Seq[UInt]](i, FAs0_io_in(i) := s)}
+    val (t$FAs0TransOutputs, _) = FAs0.trans(
       example.xiangshan.C32Inputs(FAs0_io_in),
       example.xiangshan.C32Regs()
     )
-    FAs0_io_out = FAs0TransOutputs.io_out
-    var tmp1 = List(FAs0_io_out(0), inputs.io_in(3), inputs.io_in(4))
-    FAs1_io_in = FAs1_io_in := tmp1
-    val (FAs1TransOutputs, _) = C53.this.FAs1.trans(
+    FAs0_io_out = t$FAs0TransOutputs.io_out
+    var tmp1 = Seq(FAs0_io_out(0), inputs.io_in(3), inputs.io_in(4))
+    (0 until FAs1_io_in.length)
+      .zip(tmp1)
+      .foreach { case (i, s) => FAs1_io_in = FAs1_io_in.updated[UInt, Seq[UInt]](i, FAs1_io_in(i) := s)}
+    val (t$FAs1TransOutputs, _) = FAs1.trans(
       example.xiangshan.C32Inputs(FAs1_io_in),
       example.xiangshan.C32Regs()
     )
-    FAs1_io_out = FAs1TransOutputs.io_out
-    var tmp2 = List(FAs1_io_out(0), FAs0_io_out(1), FAs1_io_out(1))
-    io_out = io_out := tmp2
+    FAs1_io_out = t$FAs1TransOutputs.io_out
+    var tmp2 = Seq(FAs1_io_out(0), FAs0_io_out(1), FAs1_io_out(1))
+    (0 until io_out.length)
+      .zip(tmp2)
+      .foreach { case (i, s) => io_out = io_out.updated[UInt, Seq[UInt]](i, io_out(i) := s)}
 
     (
       C53Outputs(io_out),

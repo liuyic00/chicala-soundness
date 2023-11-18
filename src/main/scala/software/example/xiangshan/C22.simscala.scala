@@ -3,8 +3,8 @@ package example.xiangshan
 
 import librarySimUInt._
 
-case class C22Inputs(io_in: List[UInt])
-case class C22Outputs(io_out: List[UInt])
+case class C22Inputs(io_in: Seq[UInt])
+case class C22Outputs(io_out: Seq[UInt])
 case class C22Regs()
 
 case class C22() {
@@ -27,17 +27,17 @@ case class C22() {
     require(inputsRequire(inputs) && regsRequire(regs))
 
     // output
-    var io_out = List.fill(2)(UInt.empty(1))
+    var io_out = Seq.fill(2)(UInt.empty(1))
 
     // body
-    var temp = List.fill(1)(UInt.empty(2))
+    var temp = Seq.fill(1)(UInt.empty(2))
     (0 until temp.length).foreach((i: Int) => {
       val (a, b) = (inputs.io_in(0)(i), inputs.io_in(1)(i))
       val sum = (a ^ b)
       val cout = (a & b)
-      temp = temp.updated(i, Cat(cout, sum))
+      temp = temp.updated[UInt, Seq[UInt]](i, temp(i) := Cat(cout, sum))
     })
-    (0 until io_out.length).foreach((i: Int) => io_out = io_out.updated(i, Cat(temp.reverse.map((x$2: UInt) => x$2(i)))))
+    (0 until io_out.length).foreach((i: Int) => io_out = io_out.updated[UInt, Seq[UInt]](i, io_out(i) := Cat(temp.reverse.map((x$2: UInt) => x$2(i)))))
 
     (
       C22Outputs(io_out),

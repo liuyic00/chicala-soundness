@@ -5,7 +5,7 @@ import librarySimUInt._
 
 case class DividerInputs(
     io_in_valid: Bool,
-    io_in_bits: List[UInt],
+    io_in_bits: Seq[UInt],
     io_sign: Bool,
     io_out_ready: Bool
 )
@@ -83,7 +83,7 @@ case class Divider(len: Int = 64) {
     if (when(newReq)) aSignReg_next = aSignReg_next := aSign
     if (when(newReq)) qSignReg_next = qSignReg_next := ((aSign ^ bSign) && !divBy0)
     if (when(newReq)) bReg_next = bReg_next := bVal
-    if (when(newReq)) aValx2Reg_next = aValx2Reg_next := Cat(aVal, Lit(b0).U)
+    if (when(newReq)) aValx2Reg_next = aValx2Reg_next := Cat(aVal, Lit("b0").U)
     if (when(newReq)) state_next = state_next := s_log2 else if (when((regs.state === s_log2))) {
       cnt_next = cnt_next := Mux(divBy0, Lit(0).U, Mux((canSkipShift >= Lit((len - 1)).U), Lit((len - 1)).U, canSkipShift))
       state_next = state_next := s_shift
