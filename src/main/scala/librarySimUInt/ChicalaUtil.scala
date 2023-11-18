@@ -81,7 +81,7 @@ object Cat {
   // && res.width == left.width + right.width)
   // `[T <: Bits]` then `List[T]` is not supported
   // `List[T]` in stainless lib is not covariant
-  def apply(ls: List[Bits]): UInt = {
+  def apply(ls: Seq[Bits]): UInt = {
     ls.tail.foldLeft(ls.head.asUInt) { case (res, r) => Cat(res, r) }
   }
   // ensuring(res => ls.size == 2 ==> (res.value == ls.head.value * Pow2(ls.tail.head.width) + ls.tail.head.value
@@ -105,7 +105,7 @@ object Fill {
 }
 
 object MuxLookup {
-  def apply[T <: Bits](key: UInt, default: T, mapping: List[(UInt, T)]): T = {
+  def apply[T <: Bits](key: UInt, default: T, mapping: Seq[(UInt, T)]): T = {
     mapping.foldLeft(default) { case (res, (k, v)) => Mux(k === key, v, res) }
   }
 }

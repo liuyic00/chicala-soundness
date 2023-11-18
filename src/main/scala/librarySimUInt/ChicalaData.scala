@@ -24,13 +24,32 @@ case class UInt(val value: BigInt, val width: BigInt) extends Bits {
 
   def getWidth: BigInt = width
   def asUInt: UInt     = this
+  def asSInt: SInt = {
+    val signBit = Pow2(this.width - 1)
+    val newValue =
+      if (value > signBit)
+        -(~UInt(value - 1, width).value)
+      else if (value == signBit)
+        -value
+      else
+        value
+    SInt(newValue, width)
+  }
   def asBool: Bool = {
     require(width == 1)
     Bool(if (value == 1) true else false)
   }
-  def :=(that: UInt): UInt = {
-    UInt(that.value % Pow2(this.width), this.width)
-  } ensuring (res => res.value == that.value % Pow2(this.width) && res.width == this.width)
+  def :=(that: Bits): UInt = {
+    that match {
+      case b: Bool =>
+        if (b.value) UInt(1, this.width)
+        else UInt(0, this.width)
+      case u: UInt =>
+        UInt(u.value % Pow2(this.width), this.width)
+      case s: SInt =>
+        this := s.asUInt
+    }
+  } 
 
   // Unary
 
@@ -167,7 +186,42 @@ object UInt {
   // }
 }
 
+case class SInt(val value: BigInt, val width: BigInt) extends Bits {
+
+  def apply(idx: BigInt): Bool = {
+    Bool((this.asUInt.value / Pow2(idx)) % 2 == 1)
+  }
+  def apply(left: BigInt, right: BigInt): UInt = {
+    UInt((this.asUInt.value / Pow2(right)) % Pow2(left - right + 1), left - right + 1)
+  }
+
+
+  def *(that: SInt): SInt = {
+    SInt(this.value * that.value, this.width + that.width)
+  }
+  def +(that: SInt): SInt = {
+    SInt(this.value + that.value, max(this.width, that.width))
+  }
+  def >>(that: UInt): SInt = {
+    (this.asUInt >> that).asSInt
+  }
+
+  def asUInt: UInt = {
+    val newValue =
+      if (value < 0) {
+        val signBit = Pow2(width - 1)
+        (~UInt(-value, width-1).value + 1) | signBit
+      } else
+        value
+    UInt(newValue, width)
+  }
+}
+
 case class Bool(val value: Boolean) extends Bits {
+  def apply(idx: BigInt): Bool = {
+    require(idx == 0)
+    this
+  }
   def asUInt: UInt = {
     if (value) {
       UInt(1, 1)
@@ -175,6 +229,7 @@ case class Bool(val value: Boolean) extends Bits {
       UInt(0, 1)
     }
   } ensuring (res => res.width == BigInt(1))
+  def asBool: Bool = this
 
   def asBigInt: BigInt = {
     if (value) {
@@ -227,9 +282,9 @@ object Bool {
 }
 
 case class Lit(value: BigInt, width: BigInt) {
-  require(0 <= value && value < Pow2(width))
   require(0 < width)
   def U: UInt = UInt(value, width)
+  def S: SInt = SInt(value, width)
   def B: Bool = Bool(value != 0)
 }
 
@@ -248,4 +303,14 @@ object Lit {
   def apply(value: Boolean): Lit = {
     Lit(if (value) 1 else 0, 1)
   } // ensuring(res => res.value == (if (value) 1 else 0) && res.width == 1)
+
+  def apply(s: String): Lit = {
+    val base = s.head match {
+      case 'b' => 2
+      case 'o' => 8
+      case 'h' | 'x' => 16
+    }
+    val value = BigInt(s.tail, base)
+    Lit(value)
+  }
 }
