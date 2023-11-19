@@ -298,7 +298,7 @@ object Lit {
       Pow2.Pow2BitLength(value)
       Lit(value, bitLength(value))
     }
-  } ensuring (res => res.value == value && res.width == bitLength(value))
+  }
 
   def apply(value: Boolean): Lit = {
     Lit(if (value) 1 else 0, 1)

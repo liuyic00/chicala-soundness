@@ -234,10 +234,22 @@ object Pow2 {
   }.ensuring(a * Pow2(i) % Pow2(j) == a * Pow2(i))
 }
 
+/** Returns the base-2 integer logarithm of an UInt.
+  *
+  *   - Log2(8.U) // evaluates to 3.U
+  *   - Log2(13.U) // evaluates to 3.U (truncation)
+  */
 object Log2 {
   def apply(x: UInt): UInt = {
-    val log2 = bitLength(x.value) - 1
-    UInt(log2, bitLength(log2))
+    if (x.value == 0)
+      Lit(0).U
+    else {
+      val log2 = bitLength(x.value) - 1
+      if (log2 == 0)
+        Lit(0).U
+      else
+        UInt(log2, bitLength(log2))
+    }
   }
   def apply(x: UInt, width: Int): UInt = {
     val log2 = bitLength(x.value) - 1
