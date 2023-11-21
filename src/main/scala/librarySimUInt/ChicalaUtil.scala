@@ -252,8 +252,7 @@ object Log2 {
     }
   }
   def apply(x: UInt, width: Int): UInt = {
-    val log2 = bitLength(x.value) - 1
-    UInt(log2, bitLength(log2))
+    apply(x)
   }
 }
 

@@ -100,7 +100,7 @@ case class Mul(
     var cmdHi = Lit(false).B
     var lhsSigned = Lit(false).B
     var rhsSigned = Lit(false).B
-    if ((mulUnroll != 0)) if (inputs.io_req_bits_fn == Lit(0).U) {
+    if ((mulUnroll != 0)) if ((inputs.io_req_bits_fn === Lit(0).U).value) {
       cmdMul = cmdMul := Lit(true).B
       cmdHi = cmdHi := Lit(false).B
       lhsSigned = lhsSigned := Lit(false).B

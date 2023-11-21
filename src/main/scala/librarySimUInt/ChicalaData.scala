@@ -28,7 +28,7 @@ case class UInt(val value: BigInt, val width: BigInt) extends Bits {
     val signBit = Pow2(this.width - 1)
     val newValue =
       if (value > signBit)
-        -(~UInt(value - 1, width).value)
+        -(~UInt(value - signBit - 1, width - 1).value)
       else if (value == signBit)
         -value
       else
@@ -49,7 +49,7 @@ case class UInt(val value: BigInt, val width: BigInt) extends Bits {
       case s: SInt =>
         this := s.asUInt
     }
-  } 
+  }
 
   // Unary
 
@@ -68,7 +68,7 @@ case class UInt(val value: BigInt, val width: BigInt) extends Bits {
           result
         }
       }
-      UInt(f(0, u.value, u.width), u.width)
+      UInt(f(0, u.width, u.value), u.width)
     }
     def reverseFlipUInt(u: UInt): UInt = {
       def f(result: BigInt, width: BigInt, bits: BigInt): BigInt = {
@@ -78,7 +78,7 @@ case class UInt(val value: BigInt, val width: BigInt) extends Bits {
           result
         }
       }
-      UInt(f(0, u.value, u.width), u.width)
+      UInt(f(0, u.width, u.value), u.width)
     }
     reverseUInt(reverseFlipUInt(this))
   }
@@ -195,7 +195,6 @@ case class SInt(val value: BigInt, val width: BigInt) extends Bits {
     UInt((this.asUInt.value / Pow2(right)) % Pow2(left - right + 1), left - right + 1)
   }
 
-
   def *(that: SInt): SInt = {
     SInt(this.value * that.value, this.width + that.width)
   }
@@ -210,7 +209,9 @@ case class SInt(val value: BigInt, val width: BigInt) extends Bits {
     val newValue =
       if (value < 0) {
         val signBit = Pow2(width - 1)
-        (~UInt(-value, width-1).value + 1) | signBit
+        val tmp     = (~UInt(-value, width).value + 1)
+        if (tmp >= signBit) tmp
+        else tmp + signBit
       } else
         value
     UInt(newValue, width)
@@ -306,8 +307,8 @@ object Lit {
 
   def apply(s: String): Lit = {
     val base = s.head match {
-      case 'b' => 2
-      case 'o' => 8
+      case 'b'       => 2
+      case 'o'       => 8
       case 'h' | 'x' => 16
     }
     val value = BigInt(s.tail, base)

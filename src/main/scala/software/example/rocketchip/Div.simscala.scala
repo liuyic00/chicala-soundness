@@ -100,7 +100,7 @@ case class Div(
     var cmdHi = Lit(false).B
     var lhsSigned = Lit(false).B
     var rhsSigned = Lit(false).B
-    if ((divUnroll != 0)) if (inputs.io_req_bits_fn == Lit(4).U) {
+    if ((divUnroll != 0)) if ((inputs.io_req_bits_fn === Lit(4).U).value) {
       cmdMul = cmdMul := Lit(false).B
       cmdHi = cmdHi := Lit(false).B
       lhsSigned = lhsSigned := Lit(true).B
