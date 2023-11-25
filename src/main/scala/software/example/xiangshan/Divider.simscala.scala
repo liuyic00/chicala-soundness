@@ -40,7 +40,7 @@ case class Divider(len: Int = 64) {
       shiftReg.width == (1 + (len * 2)) &&
       // Unknown size bReg &&
       // Unknown size aValx2Reg &&
-      cnt.width == bitLength(len)
+      cnt.width == bitLength(BigInt(len))
   }
 
   def trans(inputs: DividerInputs, regs: DividerRegs): (DividerOutputs, DividerRegs) = {
@@ -132,7 +132,7 @@ case class Divider(len: Int = 64) {
       randomInitValue.qSignReg,
       randomInitValue.bReg,
       randomInitValue.aValx2Reg,
-      Lit(0, bitLength(len)).U
+      Lit(0, bitLength(BigInt(len))).U
     )
     dividerRun(100, inputs, regInit)
   }

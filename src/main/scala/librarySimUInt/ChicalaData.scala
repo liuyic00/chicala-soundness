@@ -6,7 +6,7 @@ sealed abstract class Bits {
 
 case class UInt(val value: BigInt, val width: BigInt) extends Bits {
   require(0 < width)
-  require(0 <= value && value < Pow2(width))
+  require(0 <= value && value < Pow2(width), s"value: ${value}, width: ${width}")
 
   def apply(idx: BigInt): Bool = {
     require(0 <= idx && idx < width)
@@ -139,7 +139,7 @@ case class UInt(val value: BigInt, val width: BigInt) extends Bits {
     UInt(this.value << x, this.width + x)
   }
   def >>(that: UInt): UInt = {
-    UInt(this.value / Pow2(that.value), this.width - Pow2(that.width) + 1)
+    UInt(this.value / Pow2(that.value), this.width)
   }
   def >>(x: Int): UInt = {
     UInt(this.value >> x, this.width - x)
@@ -292,12 +292,16 @@ case class Lit(value: BigInt, width: BigInt) {
 // set the width of 0.U to 1, not bitLength(0)
 object Lit {
   def apply(value: BigInt): Lit = {
-    require(0 <= value)
     if (value == 0) {
       Lit(0, 1)
-    } else {
+    } else if (value > 0) {
       Pow2.Pow2BitLength(value)
       Lit(value, bitLength(value))
+    } else {
+      if (isPow2(-value)) // for "1000" under SInt
+        Lit(value, bitLength(-value))
+      else
+        Lit(value, bitLength(-value) + 1)
     }
   }
 

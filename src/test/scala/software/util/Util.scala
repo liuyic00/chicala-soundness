@@ -46,6 +46,35 @@ object DivTestCase {
   }
 }
 
+/** a * b = c
+  */
+case class MulTestCase(a: BigInt, b: BigInt, c: BigInt, width: Int, signed: Boolean) {
+  val ua = if (signed) ToSIntBits(a, width) else a
+  val ub = if (signed) ToSIntBits(b, width) else b
+  val uc = if (signed) ToSIntBits(c, width) else c
+}
+
+object MulTestCase {
+  def random(width: Int): MulTestCase = {
+    if (Random.nextInt(2) == 0)
+      randomUInt(width)
+    else
+      randomSInt(width)
+  }
+  def randomUInt(width: Int): MulTestCase = {
+    val a = RandomBigInt(width)
+    val b = RandomBigInt(width)
+    val c = a * b
+    MulTestCase(a, b, c, width, false)
+  }
+  def randomSInt(width: Int): MulTestCase = {
+    val a = RandomBigInt.signed(width)
+    val b = RandomBigInt.signed(width)
+    val c = a * b
+    MulTestCase(a, b, c, width, true)
+  }
+}
+
 object RandomBigInt {
 
   /** Get random BigInt under 1 << n

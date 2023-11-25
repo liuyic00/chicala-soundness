@@ -125,7 +125,7 @@ case class Mul(
     val prod = ((Cat(mplierSign, mplier((mulUnroll - 1), 0)).asSInt * mpcand) + accum)
     val nextMulReg = Cat(prod, mplier((mulw - 1), mulUnroll))
     val nextMplierSign = ((regs.count === Lit(((mulw / mulUnroll) - 2)).U) && regs.neg_out)
-    val eOutMask = (Lit((-1 << mulw)).S >> (regs.count * Lit(mulUnroll).U)((log2Up(mulw) - 1), 0))((mulw - 1), 0)
+    val eOutMask = (Lit((BigInt(-1) << mulw)).S >> (regs.count * Lit(mulUnroll).U)((log2Up(mulw) - 1), 0))((mulw - 1), 0)
     val eOut = ((((Lit(mulEarlyOut).B && (regs.count =/= Lit(((mulw / mulUnroll) - 1)).U)) && (regs.count =/= Lit(0).U)) && !regs.isHi) && ((mplier & ~eOutMask) === Lit(0).U))
     val eOutRes = (mulReg >> (Lit(mulw).U - (regs.count * Lit(mulUnroll).U))((log2Up(mulw) - 1), 0))
     val nextMulReg1 = Cat(nextMulReg((2 * mulw), mulw), Mux(eOut, eOutRes, nextMulReg)((mulw - 1), 0))
