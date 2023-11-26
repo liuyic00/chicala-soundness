@@ -17,8 +17,8 @@ class RocketMultiplierSpec extends AnyFlatSpec with ChiselScalatestTester {
       dut.io.req.valid.poke(true)
       dut.io.req.bits.fn.poke(0) // lhs and rhs are unsigned
       dut.io.req.bits.dw.poke(1) // not sure
-      dut.io.req.bits.in1.poke(tc.ua)
-      dut.io.req.bits.in2.poke(tc.ub)
+      dut.io.req.bits.in1.poke(tc.aBits)
+      dut.io.req.bits.in2.poke(tc.bBits)
       dut.io.req.bits.tag.poke(0)
       dut.io.req.ready.expect(true)
       dut.clock.step()
@@ -27,7 +27,7 @@ class RocketMultiplierSpec extends AnyFlatSpec with ChiselScalatestTester {
 
       def checkUntil(): Unit = {
         if (dut.io.resp.valid.peek().litValue == 1) {
-          dut.io.resp.bits.data.expect(tc.uc % (BigInt(1) << len), s"hard#${testId} ${tc}")
+          dut.io.resp.bits.data.expect(tc.cBits % (BigInt(1) << len), s"hard#${testId} ${tc}")
         } else {
           dut.clock.step()
           checkUntil()
@@ -54,8 +54,8 @@ class RocketMultiplierSpec extends AnyFlatSpec with ChiselScalatestTester {
         UInt(0, log2Up(32)), // io_req_bits_tag: UInt,
         UInt(1, 1),          // io_req_bits_dw: UInt,
         UInt(0, 4),          // io_req_bits_fn: UInt,
-        UInt(tc.ua, len),    // io_req_bits_in1: UInt,
-        UInt(tc.ub, len),    // io_req_bits_in2: UInt,
+        UInt(tc.aBits, len), // io_req_bits_in1: UInt,
+        UInt(tc.bBits, len), // io_req_bits_in2: UInt,
         Bool(true)           // io_resp_ready: Bool
       )
 
@@ -63,7 +63,7 @@ class RocketMultiplierSpec extends AnyFlatSpec with ChiselScalatestTester {
         val (newOutputs, newRegs) = soft.trans(inputs, regs)
         if (newOutputs.io_resp_valid.value == true) {
           assert(
-            newOutputs.io_resp_bits_data.value == tc.uc % (BigInt(1) << len),
+            newOutputs.io_resp_bits_data.value == tc.cBits % (BigInt(1) << len),
             s"soft#${testId} ${tc}"
           )
         } else

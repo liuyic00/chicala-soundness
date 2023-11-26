@@ -48,30 +48,39 @@ object DivTestCase {
 
 /** a * b = c
   */
-case class MulTestCase(a: BigInt, b: BigInt, c: BigInt, width: Int, signed: Boolean) {
-  val ua = if (signed) ToSIntBits(a, width) else a
-  val ub = if (signed) ToSIntBits(b, width) else b
-  val uc = if (signed) ToSIntBits(c, width) else c
+case class MulTestCase(a: BigInt, b: BigInt, c: BigInt, width: Int, aSigned: Boolean, bSigned: Boolean) {
+  val aBits = if (aSigned) ToSIntBits(a, width) else a
+  val bBits = if (bSigned) ToSIntBits(b, width) else b
+  val cBits = if (aSigned || bSigned) ToSIntBits(c, width * 2) else c
+
+  val xaBits = if (aSigned) sigExt(aBits, width, width + 1) else aBits
+  val xbBits = if (bSigned) sigExt(bBits, width, width + 1) else bBits
+  val xcBits = if (aSigned || bSigned) sigExt(cBits, width * 2, width * 2 + 2) else cBits
+
+  def sigExt(v: BigInt, w: Int, nw: Int): BigInt = {
+    val sigBit = BigInt(1) << (w - 1)
+    if ((v & sigBit) == BigInt(0)) v
+    else v | (((BigInt(1) << (nw - w)) - 1) << w)
+  }
 }
 
 object MulTestCase {
+  def random(width: Int, aSigned: Boolean, bSigned: Boolean): MulTestCase = {
+    val a = if (aSigned) RandomBigInt.signed(width) else RandomBigInt(width)
+    val b = if (bSigned) RandomBigInt.signed(width) else RandomBigInt(width)
+    val c = a * b
+    MulTestCase(a, b, c, width, aSigned, bSigned)
+  }
   def random(width: Int): MulTestCase = {
-    if (Random.nextInt(2) == 0)
-      randomUInt(width)
-    else
-      randomSInt(width)
+    val aSigned = Random.nextInt(2) == 0
+    val bSigned = Random.nextInt(2) == 0
+    random(width, aSigned, bSigned)
   }
   def randomUInt(width: Int): MulTestCase = {
-    val a = RandomBigInt(width)
-    val b = RandomBigInt(width)
-    val c = a * b
-    MulTestCase(a, b, c, width, false)
+    random(width, false, false)
   }
   def randomSInt(width: Int): MulTestCase = {
-    val a = RandomBigInt.signed(width)
-    val b = RandomBigInt.signed(width)
-    val c = a * b
-    MulTestCase(a, b, c, width, true)
+    random(width, true, true)
   }
 }
 

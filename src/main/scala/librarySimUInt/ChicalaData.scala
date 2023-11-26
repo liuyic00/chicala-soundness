@@ -9,7 +9,7 @@ case class UInt(val value: BigInt, val width: BigInt) extends Bits {
   require(0 <= value && value < Pow2(width), s"value: ${value}, width: ${width}")
 
   def apply(idx: BigInt): Bool = {
-    require(0 <= idx && idx < width)
+    require(0 <= idx && idx < width, s"idx: $idx, width: $width")
     Bool((value / Pow2(idx)) % 2 == 1)
   }
   // def apply(idx: BigInt): UInt = {

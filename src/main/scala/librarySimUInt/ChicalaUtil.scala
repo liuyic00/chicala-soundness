@@ -105,8 +105,10 @@ object Fill {
 }
 
 object MuxLookup {
-  def apply[T <: Bits](key: UInt, default: T, mapping: Seq[(UInt, T)]): T = {
-    mapping.foldLeft(default) { case (res, (k, v)) => Mux(k === key, v, res) }
+  def apply(key: UInt, default: UInt, mapping: Seq[(UInt, UInt)]): UInt = {
+    val maxWidth = mapping.foldLeft(default.width) { case (lw, (_, v)) => max(lw, v.width) }
+    val res      = mapping.foldLeft(default) { case (res, (k, v)) => Mux(k === key, v, res) }
+    UInt(res.value, maxWidth)
   }
 }
 
