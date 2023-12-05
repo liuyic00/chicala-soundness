@@ -1,4 +1,5 @@
-package hardware.example.xiangshan
+package hardware
+package example.xiangshan
 
 import chisel3._
 import chisel3.util._
