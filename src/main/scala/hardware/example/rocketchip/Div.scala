@@ -134,4 +134,16 @@ class Div(
   io.resp.bits.data := Cat(hiOut, loOut)
   io.resp.valid     := (state === s_done_div) // 44
   io.req.ready      := state === s_ready      // 45
+
+  val regin1 = RegInit(0.U(w.W))
+  val regin2 = RegInit(0.U(w.W))
+  when(io.req.ready && io.req.valid) {
+    assume(io.req.bits.fn === 4.U)
+    assume(io.req.bits.dw === 1.U)
+    regin1 := io.req.bits.in1
+    regin2 := io.req.bits.in2
+  }
+  when(io.resp.valid) {
+    assert(io.resp.bits.data.asSInt === regin1.asSInt / regin2.asSInt)
+  }
 }
